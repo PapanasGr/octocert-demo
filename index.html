@@ -1,0 +1,28 @@
+<!doctype html><html lang="el"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>OctoCert · Πλατφόρμα επιθεωρήσεων</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:linear-gradient(135deg,#232A38 0%,#2E3A52 50%,#4D5B7B 100%);color:#2B2A2D;padding:16px}
+.card{width:100%;max-width:380px;background:#fff;border-radius:16px;padding:30px 28px;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+h1{margin:0 0 4px;font-size:22px;color:#34456A}p{margin:0 0 20px;color:#5F5D62;font-size:14px;line-height:1.45}
+label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+input[type=password]{width:100%;height:44px;border:1px solid #D6D6DA;border-radius:10px;padding:0 12px;font-size:15px}
+input[type=password]:focus{outline:none;border-color:#45597E;box-shadow:0 0 0 3px rgba(69,89,126,.18)}
+.row{display:flex;align-items:center;gap:8px;margin:12px 0 18px;font-size:13px;color:#5F5D62}
+button{width:100%;height:44px;border:0;border-radius:10px;background:#45597E;color:#fff;font-size:15px;font-weight:600;cursor:pointer}
+button:disabled{opacity:.6}.err{color:#A22722;font-size:13px;margin-top:10px;min-height:18px}
+.note{margin-top:18px;font-size:12px;color:#8A8890;line-height:1.45}
+</style></head><body>
+<form class="card" id="f" autocomplete="off"><h1>OctoCert</h1><p>Πλατφόρμα επιθεωρήσεων · δοκιμαστική έκδοση επίδειξης</p>
+<label for="pw">Κωδικός πρόσβασης</label><input id="pw" type="password" autofocus>
+<div class="row"><input id="rm" type="checkbox"><label for="rm" style="margin:0;font-weight:400">Να με θυμάται σε αυτή τη συσκευή</label></div>
+<button id="go" type="submit">Είσοδος</button><div class="err" id="err"></div>
+<div class="note">Έκδοση επίδειξης. Ό,τι καταχωρείτε μένει μόνο σε αυτόν τον browser.</div></form>
+<script>
+(function(){var CFG={"salt": "710b7c74bec0f9277191278ef31bc476", "iter": 210000};var q=new URLSearchParams(location.search),next=q.get('next')||'Main.dc.html';if(!/^[A-Za-z]+\.dc\.html$/.test(next))next='Main.dc.html';
+if(q.get('err'))document.getElementById('err').textContent='Η σύνδεση έληξε. Ξαναβάλε τον κωδικό.';
+var hex=function(h){var u=new Uint8Array(h.length/2);for(var i=0;i<u.length;i++)u[i]=parseInt(h.substr(i*2,2),16);return u;};
+document.getElementById('f').addEventListener('submit',function(e){e.preventDefault();var pw=document.getElementById('pw').value,btn=document.getElementById('go'),er=document.getElementById('err');if(!pw)return;btn.disabled=true;er.textContent='Έλεγχος…';
+crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']).then(function(b){return crypto.subtle.deriveKey({name:'PBKDF2',salt:hex(CFG.salt),iterations:CFG.iter,hash:'SHA-256'},b,{name:'AES-GCM',length:256},true,['decrypt']);})
+.then(function(k){return fetch('e/idx',{cache:'no-cache'}).then(function(r){return r.arrayBuffer();}).then(function(buf){var u=new Uint8Array(buf);return crypto.subtle.decrypt({name:'AES-GCM',iv:u.slice(0,12)},k,u.slice(12));}).then(function(){return crypto.subtle.exportKey('raw',k);});})
+.then(function(raw){var s=btoa(String.fromCharCode.apply(null,new Uint8Array(raw)));try{sessionStorage.setItem('octo_k',s);if(document.getElementById('rm').checked)localStorage.setItem('octo_k',s);}catch(x){}location.replace(next);})
+.catch(function(){btn.disabled=false;er.textContent='Λάθος κωδικός.';});});})();
+</script></body></html>
